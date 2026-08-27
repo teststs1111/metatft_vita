@@ -1,1 +1,26 @@
+name: Build VPK
 
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip project
+        run: unzip -o metatft-vita.zip
+
+      - name: Build with VitaSDK (Docker)
+        run: |
+          docker run --rm -v "$PWD/metatft-vita:/workspace" vitasdk/vitasdk:latest \
+            sh -c 'cmake -B build -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake && cmake --build build'
+
+      - name: Upload VPK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metatft-vita-vpk
+          path: metatft-vita/build/*.vpk
